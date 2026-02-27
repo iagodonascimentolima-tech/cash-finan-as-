@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cash Finanças Pro</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background-color: #0f172a;
+            color: white;
+            text-align: center;
+        }
+
+        .box {
+            background: #1e293b;
+            padding: 20px;
+            margin: 30px auto;
+            width: 350px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px black;
+        }
+
+        input {
+            padding: 8px;
+            width: 90%;
+            margin: 5px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        button {
+            padding: 8px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .verde { background: green; color: white; }
+        .vermelho { background: red; color: white; }
+        .azul { background: #2563eb; color: white; }
+
+        #historico {
+            text-align: left;
+            max-height: 120px;
+            overflow-y: auto;
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .item { font-size: 14px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+<div class="box" id="loginBox">
+    <h2>Login 🔐</h2>
+    <p>Usuário: <b>Iago do Nascimento Lima</b></p>
+    <input type="password" id="senha" placeholder="Digite a senha">
+    <button class="azul" onclick="entrar()">Entrar</button>
+    <p id="erro" style="color:red;"></p>
+</div>
+
+<div id="appBox" style="display:none;">
+
+    <div class="box">
+        <h1>Cash Finanças 💰</h1>
+
+        <input type="number" id="valor" placeholder="Digite o valor">
+        <br>
+        <button class="verde" onclick="adicionar('ganho')">Adicionar</button>
+        <button class="vermelho" onclick="adicionar('gasto')">Gastar</button>
+
+        <h2>Saldo: R$ <span id="saldo">0</span></h2>
+
+        <h3>Histórico</h3>
+        <div id="historico"></div>
+        <button class="azul" onclick="limpar()">Limpar Histórico</button>
+    </div>
+
+    <div class="box">
+        <h3>Meta Financeira 🎯</h3>
+        <input type="number" id="metaValor" placeholder="Valor total da meta">
+        <input type="date" id="metaData">
+        <button class="azul" onclick="calcularMeta()">Calcular</button>
+        <p id="resultadoMeta"></p>
+    </div>
+
+    <div class="box">
+        <h3>Alterar Senha 🔑</h3>
+        <input type="password" id="novaSenha" placeholder="Nova senha">
+        <button class="azul" onclick="alterarSenha()">Alterar Senha</button>
+        <p id="msgSenha"></p>
+    </div>
+
+</div>
+
+<script>
+
+let senhaSalva = localStorage.getItem("senha") || "mestre";
+let saldo = parseFloat(localStorage.getItem("saldo")) || 0;
+let historico = JSON.parse(localStorage.getItem("historico")) || [];
+
+function entrar() {
+    const senha = document.getElementById("senha").value;
+    if (senha === senhaSalva) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("appBox").style.display = "block";
+        atualizarTela();
+    } else {
+        document.getElementById("erro").innerText = "Senha incorreta!";
+    }
+}
+
+function adicionar(tipo) {
+    const valor = parseFloat(document.getElementById("valor").value);
+    if (!isNaN(valor)) {
+        if (tipo === "ganho") {
+            saldo += valor;
+            historico.push("+ R$ " + valor.toFixed(2));
+        } else {
+            saldo -= valor;
+            historico.push("- R$ " + valor.toFixed(2));
+        }
+        salvar();
+        atualizarTela();
+        document.getElementById("valor").value = "";
+    }
+}
+
+function atualizarTela() {
+    document.getElementById("saldo").innerText = saldo.toFixed(2);
+    const lista = document.getElementById("historico");
+    lista.innerHTML = "";
+    historico.forEach(item => {
+        lista.innerHTML += "<div class='item'>" + item + "</div>";
+    });
+}
+
+function salvar() {
+    localStorage.setItem("saldo", saldo);
+    localStorage.setItem("historico", JSON.stringify(historico));
+}
+
+function limpar() {
+    saldo = 0;
+    historico = [];
+    salvar();
+    atualizarTela();
+}
+
+function alterarSenha() {
+    const nova = document.getElementById("novaSenha").value;
+    if (nova.length >= 3) {
+        senhaSalva = nova;
+        localStorage.setItem("senha", nova);
+        document.getElementById("msgSenha").innerText = "Senha alterada com sucesso!";
+    } else {
+        document.getElementById("msgSenha").innerText = "Senha muito curta!";
+    }
+}
+
+function calcularMeta() {
+    const valorMeta = parseFloat(document.getElementById("metaValor").value);
+    const dataMeta = new Date(document.getElementById("metaData").value);
+    const hoje = new Date();
+
+    if (!isNaN(valorMeta) && dataMeta > hoje) {
+        const meses = (dataMeta.getFullYear() - hoje.getFullYear()) * 12 +
+                      (dataMeta.getMonth() - hoje.getMonth());
+
+        if (meses > 0) {
+            const porMes = valorMeta / meses;
+            document.getElementById("resultadoMeta").innerText =
+                "Você precisa guardar R$ " + porMes.toFixed(2) + " por mês.";
+        } else {
+            document.getElementById("resultadoMeta").innerText =
+                "Data muito próxima.";
+        }
+    } else {
+        document.getElementById("resultadoMeta").innerText =
+            "Preencha os dados corretamente.";
+    }
+}
+
+</script>
+
+</body>
+</html>
+21:22 26/02/2026
