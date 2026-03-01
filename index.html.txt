@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Finanças Pessoais</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="login">
+    <h2>Login</h2>
+    <input type="text" id="user" placeholder="Usuário">
+    <input type="password" id="pass" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <div id="app" style="display:none;">
+    <h1>Controle Financeiro</h1>
+    
+    <section id="dashboard">
+      <h2>Resumo</h2>
+      <p>Ganhos Diários: <span id="ganhosDia">0</span></p>
+      <p>Ganhos Semanais: <span id="ganhosSemana">0</span></p>
+      <p>Ganhos Mensais: <span id="ganhosMes">0</span></p>
+      <p>Gastos Totais: <span id="gastosMes">0</span></p>
+    </section>
+
+    <section id="transacoes">
+      <h2>Adicionar Transação</h2>
+      <input type="text" id="categoria" placeholder="Categoria">
+      <input type="number" id="valor" placeholder="Valor">
+      <select id="tipo">
+        <option value="ganho">Ganho</option>
+        <option value="gasto">Gasto</option>
+      </select>
+      <button onclick="adicionarTransacao()">Salvar</button>
+    </section>
+
+    <section id="grafico">
+      <h2>Gráfico Mensal</h2>
+      <canvas id="chart"></canvas>
+    </section>
+
+    <section id="metas">
+      <h2>Metas Pessoais</h2>
+      <input type="text" id="metaNome" placeholder="Nome da meta">
+      <input type="number" id="metaValor" placeholder="Valor total">
+      <input type="date" id="metaData">
+      <button onclick="salvarMeta()">Salvar Meta</button>
+      <p id="metaInfo"></p>
+      <input type="number" id="deposito" placeholder="Depositar">
+      <button onclick="depositar()">Depositar</button>
+      <p id="saldoMeta"></p>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html> 
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f4f4f4;
+}
+
+h1, h2 {
+  color: #333;
+}
+
+section {
+  background: #fff;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+input, select, button {
+  margin: 5px;
+  padding: 8px;
+}	let transacoes = [];
+let meta = null;
+let saldoGuardado = 0;
+
+function login() {
+  const user = document.getElementById("user").value;
+  const pass = document.getElementById("pass").value;
+  if (user === "iago" && pass === "mestre") {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  } else {
+    alert("Usuário ou senha incorretos!");
+  }
+}
+
+function adicionarTransacao() {
+  const categoria = document.getElementById("categoria").value;
+  const valor = parseFloat(document.getElementById("valor").value);
+  const tipo = document.getElementById("tipo").value;
+  const data = new Date();
+
+  transacoes.push({categoria, valor, tipo, data});
+  atualizarDashboard();
+  atualizarGrafico();
+}
+
+function atualizarDashboard() {
+  let ganhosDia = 0, ganhosSemana = 0, ganhosMes = 0, gastosMes = 0;
+  const hoje = new Date();
+  transacoes.forEach(t => {
+    const diffDias = (hoje - t.data) / (1000*60*60*24);
+    if (t.tipo === "ganho") {
+      if (diffDias < 1) ganhosDia += t.valor;
+      if (diffDias < 7) ganhosSemana += t.valor;
+      if (hoje.getMonth() === t.data.getMonth()) ganhosMes += t.valor;
+    } else {
+      if (hoje.getMonth() === t.data.getMonth()) gastosMes += t.valor;
+    }
+  });
+  document.getElementById("ganhosDia").innerText = ganhosDia;
+  document.getElementById("ganhosSemana").innerText = ganhosSemana;
+  document.getElementById("ganhosMes").innerText = ganhosMes;
+  document.getElementById("gastosMes").innerText = gastosMes;
+}
+
+function atualizarGrafico() {
+  const ganhos = transacoes.filter(t => t.tipo==="ganho").reduce((a,b)=>a+b.valor,0);
+  const gastos = transacoes.filter(t => t.tipo==="gasto").reduce((a,b)=>a+b.valor,0);
+
+  new Chart(document.getElementById("chart"), {
+    type: 'bar',
+    data: {
+      labels: ["Ganhos", "Gastos"],
+      datasets: [{
+        label: "Mensal",
+        data: [ganhos, gastos],
+        backgroundColor: ["green","red"]
+      }]
+    }
+  });
+}
+
+function salvarMeta() {
+  const nome = document.getElementById("metaNome").value;
+  const valor = parseFloat(document.getElementById("metaValor").value);
+  const data = new Date(document.getElementById("metaData").value);
+  meta = {nome, valor, data};
+  const mesesRestantes = (data.getFullYear()*12+data.getMonth()) - (new Date().getFullYear()*12+new Date().getMonth());
+  const porMes = valor / mesesRestantes;
+  document.getElementById("metaInfo").innerText = `Meta: ${nome}, guardar R$${porMes.toFixed(2)} por mês`;
+}
+
+function depositar() {
+  const valor = parseFloat(document.getElementById("deposito").value);
+  saldoGuardado += valor;
+  const restante = meta.valor - saldoGuardado;
+  document.getElementById("saldoMeta").innerText = `Já guardado: R$${saldoGuardado}, falta: R$${restante}`;
+}{
+  "name": "Finanças Pessoais",
+  "short_name": "Finanças",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#333333",
+  "icons": []
+}self.addEventListener("install", e => {
+  e.waitUntil(
+    caches.open("app-cache").then(cache => {
+      return cache.addAll(["/", "/index.html", "/style.css", "/app.js"]);
+    })
+  );
+});
+
+self.addEventListener("fetch", e => {
+  e.respondWith(
+    caches.match(e.request).then(response => response || fetch(e.request))
+  );
+});
